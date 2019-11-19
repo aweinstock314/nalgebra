@@ -5,7 +5,7 @@ use std::any::Any;
 use crate::base::constraint::{SameNumberOfColumns, SameNumberOfRows, ShapeConstraint};
 use crate::base::dimension::{Dim, U1};
 use crate::base::storage::ContiguousStorageMut;
-use crate::base::{DefaultAllocator, Scalar};
+use crate::base::{DefaultAllocator, Scalar, UninitScalar};
 
 /// A matrix allocator of a memory buffer that may contain `R::to_usize() * C::to_usize()`
 /// elements of type `N`.
@@ -21,6 +21,7 @@ pub trait Allocator<N: Scalar + Copy, R: Dim, C: Dim = U1>: Any + Sized {
     type Buffer: ContiguousStorageMut<N, R, C> + Clone;
 
     /// Allocates a buffer with the given number of rows and columns without initializing its content.
+    //unsafe fn allocate_uninitialized(nrows: R, ncols: C) -> <Self as Allocator<UninitScalar<N>, R, C>>::Buffer;
     unsafe fn allocate_uninitialized(nrows: R, ncols: C) -> Self::Buffer;
 
     /// Allocates a buffer initialized with the content of the given iterator.

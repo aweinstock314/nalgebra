@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::any::TypeId;
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Formatter};
+use std::mem::MaybeUninit;
 
 /// The basic scalar type for all structures of `nalgebra`.
 ///
@@ -15,3 +16,25 @@ pub trait Scalar: PartialEq + Debug + Any {
     }
 }
 impl<T: Copy + PartialEq + Debug + Any> Scalar for T {}
+
+/// A newtype wrapper that provides the necessary trait implementations for MaybeUninit
+/// This is needed because MaybeUninit does not pass through implementations on uninitialized data (for good reason)
+pub struct UninitScalar<S: Scalar>(MaybeUninit<S>);
+
+impl<S: Scalar> Clone for UninitScalar<S> {
+    fn clone(&self) -> Self {
+        panic!("Clone::clone called on potentially uninitialized data")
+    }
+}
+
+impl<S: Scalar> PartialEq for UninitScalar<S> {
+    fn eq(&self, _: &Self) -> bool {
+        panic!("PartialEq::eq called on potentially uninitalized data")
+    }
+}
+impl<S: Scalar> Debug for UninitScalar<S> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "UninitScalar")
+    }
+}
+impl<S: Scalar> Scalar for UninitScalar<S> {}
