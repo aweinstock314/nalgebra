@@ -41,8 +41,10 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
+    Prod<R::Value, C::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     type Buffer = ArrayStorage<N, R, C>;
+    type UninitBuffer = ArrayStorage<mem::MaybeUninit<N>, R, C>;
 
     #[inline]
     unsafe fn allocate_uninitialized(_: R, _: C) -> Self::Buffer {

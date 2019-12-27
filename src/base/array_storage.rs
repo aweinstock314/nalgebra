@@ -15,6 +15,8 @@ use std::marker::PhantomData;
 #[cfg(feature = "serde-serialize")]
 use std::mem;
 
+use std::mem::MaybeUninit;
+
 #[cfg(feature = "abomonation-serialize")]
 use abomonation::Abomonation;
 
@@ -25,6 +27,7 @@ use crate::base::allocator::Allocator;
 use crate::base::default_allocator::DefaultAllocator;
 use crate::base::dimension::{DimName, U1};
 use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Owned, Storage, StorageMut};
+use crate::base::storage::{GenericOverInitializedness, InitializedTag, UninitializedTag};
 use crate::base::Scalar;
 
 /*
@@ -152,7 +155,7 @@ where
     }
 }
 
-unsafe impl<N, R, C> Storage<N, R, C> for ArrayStorage<N, R, C>
+unsafe impl<N, R, C> Storage<N, R, C, InitializedTag> for ArrayStorage<N, R, C>
 where
     N: Scalar,
     R: DimName,
@@ -204,7 +207,7 @@ where
     }
 }
 
-unsafe impl<N, R, C> StorageMut<N, R, C> for ArrayStorage<N, R, C>
+unsafe impl<N, R, C> StorageMut<N, R, C, InitializedTag> for ArrayStorage<N, R, C>
 where
     N: Scalar,
     R: DimName,
@@ -224,7 +227,7 @@ where
     }
 }
 
-unsafe impl<N, R, C> ContiguousStorage<N, R, C> for ArrayStorage<N, R, C>
+unsafe impl<N, R, C> ContiguousStorage<N, R, C, InitializedTag> for ArrayStorage<N, R, C>
 where
     N: Scalar,
     R: DimName,
@@ -234,7 +237,7 @@ where
     DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
 {}
 
-unsafe impl<N, R, C> ContiguousStorageMut<N, R, C> for ArrayStorage<N, R, C>
+unsafe impl<N, R, C> ContiguousStorageMut<N, R, C, InitializedTag> for ArrayStorage<N, R, C>
 where
     N: Scalar,
     R: DimName,
@@ -242,6 +245,99 @@ where
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
     DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
+{}
+
+unsafe impl<N, R, C> Storage<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
+where
+    N: Scalar,
+    R: DimName,
+    C: DimName,
+    R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
+{
+    type RStride = U1;
+    type CStride = R;
+
+    #[inline]
+    fn ptr(&self) -> *const MaybeUninit<N> {
+        self[..].as_ptr()
+    }
+
+    #[inline]
+    fn shape(&self) -> (R, C) {
+        (R::name(), C::name())
+    }
+
+    #[inline]
+    fn strides(&self) -> (Self::RStride, Self::CStride) {
+        (Self::RStride::name(), Self::CStride::name())
+    }
+
+    #[inline]
+    fn is_contiguous(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn into_owned(self) -> Owned<MaybeUninit<N>, R, C>
+    where DefaultAllocator: Allocator<N, R, C> {
+        self
+    }
+
+    #[inline]
+    fn clone_owned(&self) -> Owned<MaybeUninit<N>, R, C>
+    where DefaultAllocator: Allocator<N, R, C> {
+        let it = self.iter().cloned();
+
+        DefaultAllocator::allocate_from_iterator(self.shape().0, self.shape().1, it)
+    }
+
+    #[inline]
+    fn as_slice(&self) -> &[N] {
+        &self[..]
+    }
+}
+
+
+unsafe impl<N, R, C> StorageMut<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
+where
+    N: Scalar,
+    R: DimName,
+    C: DimName,
+    R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
+{
+    #[inline]
+    fn ptr_mut(&mut self) -> *mut MaybeUninit<N> {
+        self[..].as_mut_ptr()
+    }
+
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [MaybeUninit<N>] {
+        &mut self[..]
+    }
+}
+
+unsafe impl<N, R, C> ContiguousStorage<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
+where
+    N: Scalar,
+    R: DimName,
+    C: DimName,
+    R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<N>,
+    DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
+{}
+
+unsafe impl<N, R, C> ContiguousStorageMut<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
+where
+    N: Scalar,
+    R: DimName,
+    C: DimName,
+    R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<N>,
+    DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
 {}
 
 /*
