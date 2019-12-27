@@ -80,6 +80,7 @@ where
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<N: Scalar, C: Dim> Allocator<N, Dynamic, C> for DefaultAllocator {
     type Buffer = VecStorage<N, Dynamic, C>;
+    //type UninitBuffer = VecStorage<mem::MaybeUninit<N>, Dynamic, C>;
 
     #[inline]
     unsafe fn allocate_uninitialized(nrows: Dynamic, ncols: C) -> Self::Buffer {
@@ -153,6 +154,7 @@ where
     Self: Allocator<N, RFrom, CFrom>,
     RTo::Value: Mul<CTo::Value>,
     Prod<RTo::Value, CTo::Value>: ArrayLength<N>,
+    Prod<RTo::Value, CTo::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     #[inline]
     unsafe fn reallocate_copy(
@@ -182,6 +184,7 @@ where
     CTo: Dim,
     RFrom::Value: Mul<CFrom::Value>,
     Prod<RFrom::Value, CFrom::Value>: ArrayLength<N>,
+    Prod<RFrom::Value, CFrom::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     #[inline]
     unsafe fn reallocate_copy(
@@ -211,6 +214,7 @@ where
     RTo: DimName,
     RFrom::Value: Mul<CFrom::Value>,
     Prod<RFrom::Value, CFrom::Value>: ArrayLength<N>,
+    Prod<RFrom::Value, CFrom::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     #[inline]
     unsafe fn reallocate_copy(

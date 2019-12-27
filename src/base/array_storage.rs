@@ -27,7 +27,7 @@ use crate::base::allocator::Allocator;
 use crate::base::default_allocator::DefaultAllocator;
 use crate::base::dimension::{DimName, U1};
 use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Owned, Storage, StorageMut};
-use crate::base::storage::{GenericOverInitializedness, InitializedTag, UninitializedTag};
+use crate::base::storage::{GenericOverInitializedness, GenericOverInitializednessAllocatorDispatch, InitializedTag, UninitializedTag};
 use crate::base::Scalar;
 
 /*
@@ -162,7 +162,8 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
-    DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, Buffer = Self, UninitBuffer = ArrayStorage<MaybeUninit<N>, R, C>>,
 {
     type RStride = U1;
     type CStride = R;
@@ -214,7 +215,8 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
-    DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, Buffer = Self, UninitBuffer = ArrayStorage<MaybeUninit<N>, R, C>>,
 {
     #[inline]
     fn ptr_mut(&mut self) -> *mut N {
@@ -234,7 +236,8 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
-    DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, Buffer = Self, UninitBuffer = ArrayStorage<MaybeUninit<N>, R, C>>,
 {}
 
 unsafe impl<N, R, C> ContiguousStorageMut<N, R, C, InitializedTag> for ArrayStorage<N, R, C>
@@ -244,7 +247,8 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
-    DefaultAllocator: Allocator<N, R, C, Buffer = Self>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
+    DefaultAllocator: Allocator<N, R, C, Buffer = Self, UninitBuffer = ArrayStorage<MaybeUninit<N>, R, C>>,
 {}
 
 unsafe impl<N, R, C> Storage<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
@@ -253,6 +257,7 @@ where
     R: DimName,
     C: DimName,
     R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<N>,
     Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
     DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
 {
@@ -280,13 +285,13 @@ where
     }
 
     #[inline]
-    fn into_owned(self) -> Owned<MaybeUninit<N>, R, C>
+    fn into_owned(self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, C, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, R, C> {
         self
     }
 
     #[inline]
-    fn clone_owned(&self) -> Owned<MaybeUninit<N>, R, C>
+    fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, C, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, R, C> {
         let it = self.iter().cloned();
 
@@ -306,6 +311,7 @@ where
     R: DimName,
     C: DimName,
     R::Value: Mul<C::Value>,
+    Prod<R::Value, C::Value>: ArrayLength<N>,
     Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
     DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
 {
@@ -327,6 +333,7 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
     DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
 {}
 
@@ -337,6 +344,7 @@ where
     C: DimName,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
+    Prod<R::Value, C::Value>: ArrayLength<MaybeUninit<N>>,
     DefaultAllocator: Allocator<N, R, C, UninitBuffer = Self>,
 {}
 

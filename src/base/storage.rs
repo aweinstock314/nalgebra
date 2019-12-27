@@ -68,7 +68,7 @@ unsafe impl<N: Scalar, R: Dim, C: Dim, A: Allocator<N, R, C>> GenericOverInitial
 /// should **not** allow the user to modify the size of the underlying buffer with safe methods
 /// (for example the `VecStorage::data_mut` method is unsafe because the user could change the
 /// vector's size so that it no longer contains enough elements: this will lead to UB.
-pub unsafe trait Storage<N: Scalar, R: Dim, C: Dim = U1, G: GenericOverInitializedness<N, R, C> = InitializedTag>: Debug + Sized {
+pub unsafe trait Storage<N: Scalar, R: Dim, C: Dim = U1, G: GenericOverInitializedness<N, R, C> = InitializedTag>: Sized {
     /// The static stride of this storage's rows.
     type RStride: Dim;
 
