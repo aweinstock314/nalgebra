@@ -11,6 +11,8 @@ use crate::dimension::Dynamic;
 use crate::dimension::{Dim, DimName, U1};
 use crate::storage::StorageMut;
 
+use std::fmt;
+
 /// A sequence of row or column permutations.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -27,13 +29,21 @@ use crate::storage::StorageMut;
          VectorN<(usize, usize), D>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PermutationSequence<D: Dim>
 where DefaultAllocator: Allocator<(usize, usize), D>
 {
     len: usize,
     ipiv: VectorN<(usize, usize), D>,
 }
+
+impl<D: Dim> fmt::Debug for PermutationSequence<D>
+    where DefaultAllocator: Allocator<(usize, usize), D>, VectorN<(usize, usize), D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("PermutationSequence").field("len", &self.len).field("ipiv", &self.ipiv).finish()
+    }
+}
+
 
 impl<D: Dim> Copy for PermutationSequence<D>
 where

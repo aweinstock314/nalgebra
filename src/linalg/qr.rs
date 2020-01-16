@@ -12,6 +12,8 @@ use crate::storage::{Storage, StorageMut};
 use crate::geometry::Reflection;
 use crate::linalg::householder;
 
+use std::fmt;
+
 /// The QR decomposition of a general matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -32,13 +34,21 @@ use crate::linalg::householder;
          VectorN<N, DimMinimum<R, C>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct QR<N: ComplexField, R: DimMin<C>, C: Dim>
 where DefaultAllocator: Allocator<N, R, C> + Allocator<N, DimMinimum<R, C>>
 {
     qr: MatrixMN<N, R, C>,
     diag: VectorN<N, DimMinimum<R, C>>,
 }
+
+impl<N: ComplexField, R: DimMin<C>, C: Dim> fmt::Debug for QR<N, R, C>
+    where DefaultAllocator: Allocator<N, R, C> + Allocator<N, DimMinimum<R, C>>, MatrixMN<N, R, C>: fmt::Debug, VectorN<N, DimMinimum<R, C>>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("QR").field("qr", &self.qr).field("diag", &self.diag).finish()
+    }
+}
+
 
 impl<N: ComplexField, R: DimMin<C>, C: Dim> Copy for QR<N, R, C>
 where

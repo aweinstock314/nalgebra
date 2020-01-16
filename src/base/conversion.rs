@@ -17,7 +17,7 @@ use crate::base::dimension::{
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::base::dimension::Dynamic;
 use crate::base::iter::{MatrixIter, MatrixIterMut};
-use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Storage, StorageMut};
+use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Storage, StorageMut, InitializedTag};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::base::VecStorage;
 use crate::base::{SliceStorage, SliceStorageMut};
@@ -349,6 +349,7 @@ where
     CStride: Dim,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
+    ArrayStorage<N, R, C>: Storage<N, R, C, InitializedTag>,
 {
     fn from(matrix_slice: MatrixSlice<'a, N, R, C, RStride, CStride>) -> Self {
         matrix_slice.into_owned()

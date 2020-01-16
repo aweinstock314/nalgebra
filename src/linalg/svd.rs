@@ -15,6 +15,8 @@ use crate::linalg::symmetric_eigen;
 use crate::linalg::Bidiagonal;
 use crate::linalg::givens::GivensRotation;
 
+use std::fmt;
+
 /// Singular Value Decomposition of a general matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -39,7 +41,7 @@ use crate::linalg::givens::GivensRotation;
          VectorN<N::RealField, DimMinimum<R, C>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SVD<N: ComplexField, R: DimMin<C>, C: Dim>
 where DefaultAllocator: Allocator<N, DimMinimum<R, C>, C>
         + Allocator<N, R, DimMinimum<R, C>>
@@ -52,6 +54,21 @@ where DefaultAllocator: Allocator<N, DimMinimum<R, C>, C>
     /// The singular values of this SVD.
     pub singular_values: VectorN<N::RealField, DimMinimum<R, C>>,
 }
+
+impl<N: ComplexField, R: DimMin<C>, C: Dim> fmt::Debug for SVD<N, R, C>
+where
+    DefaultAllocator: Allocator<N, DimMinimum<R, C>, C>
+        + Allocator<N, R, DimMinimum<R, C>>
+        + Allocator<N::RealField, DimMinimum<R, C>>,
+    MatrixMN<N, R, DimMinimum<R, C>>: fmt::Debug,
+    MatrixMN<N, DimMinimum<R, C>, C>: fmt::Debug,
+    VectorN<N::RealField, DimMinimum<R, C>>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SVD").field("u", &self.u).field("v_t", &self.v_t).field("singular_values", &self.singular_values).finish()
+    }
+}
+
 
 impl<N: ComplexField, R: DimMin<C>, C: Dim> Copy for SVD<N, R, C>
 where

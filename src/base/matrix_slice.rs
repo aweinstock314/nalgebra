@@ -6,7 +6,7 @@ use crate::base::allocator::Allocator;
 use crate::base::default_allocator::DefaultAllocator;
 use crate::base::dimension::{Dim, DimName, Dynamic, U1, IsNotStaticOne};
 use crate::base::iter::MatrixIter;
-use crate::base::storage::{Owned, Storage, StorageMut, ContiguousStorage, ContiguousStorageMut};
+use crate::base::storage::{Owned, Storage, StorageMut, ContiguousStorage, ContiguousStorageMut, InitializedTag, UninitializedTag};
 use crate::base::{Matrix, Scalar};
 
 macro_rules! slice_storage_impl(
@@ -110,7 +110,7 @@ impl<'a, N: Scalar, R: Dim, C: Dim, RStride: Dim, CStride: Dim> Clone
 
 macro_rules! storage_impl(
     ($($T: ident),* $(,)*) => {$(
-        unsafe impl<'a, N: Scalar, R: Dim, C: Dim, RStride: Dim, CStride: Dim> Storage<N, R, C>
+        unsafe impl<'a, N: Scalar, R: Dim, C: Dim, RStride: Dim, CStride: Dim> Storage<N, R, C, InitializedTag>
             for $T<'a, N, R, C, RStride, CStride> {
 
             type RStride = RStride;
@@ -178,7 +178,7 @@ macro_rules! storage_impl(
 
 storage_impl!(SliceStorage, SliceStorageMut);
 
-unsafe impl<'a, N: Scalar, R: Dim, C: Dim, RStride: Dim, CStride: Dim> StorageMut<N, R, C>
+unsafe impl<'a, N: Scalar, R: Dim, C: Dim, RStride: Dim, CStride: Dim> StorageMut<N, R, C, InitializedTag>
     for SliceStorageMut<'a, N, R, C, RStride, CStride>
 {
     #[inline]

@@ -19,12 +19,19 @@ use crate::base::{DefaultAllocator, Scalar, VectorN};
 
 /// A point in a n-dimensional euclidean space.
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Point<N: Scalar, D: DimName>
 where DefaultAllocator: Allocator<N, D>
 {
     /// The coordinates of this point, i.e., the shift from the origin.
     pub coords: VectorN<N, D>,
+}
+
+impl<N: Scalar, D: DimName> fmt::Debug for Point<N, D>
+    where DefaultAllocator: Allocator<N, D>, VectorN<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Point").field("coords", &self.coords).finish()
+    }
 }
 
 impl<N: Scalar + hash::Hash, D: DimName + hash::Hash> hash::Hash for Point<N, D>

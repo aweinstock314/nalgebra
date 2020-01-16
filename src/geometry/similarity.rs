@@ -21,7 +21,6 @@ use crate::geometry::{Isometry, Point, Translation};
 
 /// A similarity, i.e., an uniform scaling, followed by a rotation, followed by a translation.
 #[repr(C)]
-#[derive(Debug)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "serde-serialize",
@@ -47,6 +46,13 @@ where DefaultAllocator: Allocator<N, D>
     /// The part of this similarity that does not include the scaling factor.
     pub isometry: Isometry<N, D, R>,
     scaling: N,
+}
+
+impl<N: RealField, D: DimName, R> fmt::Debug for Similarity<N, D, R>
+    where DefaultAllocator: Allocator<N, D>, Isometry<N, D, R>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Similarity").field("isometry", &self.isometry).field("scaling", &self.scaling).finish()
+    }
 }
 
 #[cfg(feature = "abomonation-serialize")]

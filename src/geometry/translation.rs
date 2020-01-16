@@ -22,13 +22,19 @@ use crate::geometry::Point;
 
 /// A translation.
 #[repr(C)]
-#[derive(Debug)]
 pub struct Translation<N: Scalar, D: DimName>
 where DefaultAllocator: Allocator<N, D>
 {
     /// The translation coordinates, i.e., how much is added to a point's coordinates when it is
     /// translated.
     pub vector: VectorN<N, D>,
+}
+
+impl<N: Scalar, D: DimName> fmt::Debug for Translation<N, D>
+    where DefaultAllocator: Allocator<N, D>, VectorN<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Translation").field("vector", &self.vector).finish()
+    }
 }
 
 impl<N: Scalar + hash::Hash, D: DimName + hash::Hash> hash::Hash for Translation<N, D>

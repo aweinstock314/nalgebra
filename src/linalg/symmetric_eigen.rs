@@ -13,6 +13,8 @@ use crate::storage::Storage;
 use crate::linalg::givens::GivensRotation;
 use crate::linalg::SymmetricTridiagonal;
 
+use std::fmt;
+
 /// Eigendecomposition of a symmetric matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -33,7 +35,7 @@ use crate::linalg::SymmetricTridiagonal;
          MatrixN<N, D>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SymmetricEigen<N: ComplexField, D: Dim>
 where DefaultAllocator: Allocator<N, D, D> + Allocator<N::RealField, D>
 {
@@ -43,6 +45,14 @@ where DefaultAllocator: Allocator<N, D, D> + Allocator<N::RealField, D>
     /// The unsorted eigenvalues of the decomposed matrix.
     pub eigenvalues: VectorN<N::RealField, D>,
 }
+
+impl<N: ComplexField, D: Dim> fmt::Debug for SymmetricEigen<N, D>
+    where DefaultAllocator: Allocator<N, D, D> + Allocator<N::RealField, D>, MatrixN<N, D>: fmt::Debug, VectorN<N::RealField, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SymmetricEigen").field("eigenvectors", &self.eigenvectors).field("eigenvalues", &self.eigenvalues).finish()
+    }
+}
+
 
 impl<N: ComplexField, D: Dim> Copy for SymmetricEigen<N, D>
 where

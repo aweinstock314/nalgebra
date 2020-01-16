@@ -16,6 +16,8 @@ use crate::linalg::householder;
 use crate::linalg::Hessenberg;
 use crate::linalg::givens::GivensRotation;
 
+use std::fmt;
+
 /// Schur decomposition of a square matrix.
 ///
 /// If this is a real matrix, this will be a RealField Schur decomposition.
@@ -34,12 +36,19 @@ use crate::linalg::givens::GivensRotation;
          MatrixN<N, D>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Schur<N: ComplexField, D: Dim>
 where DefaultAllocator: Allocator<N, D, D>
 {
     q: MatrixN<N, D>,
     t: MatrixN<N, D>,
+}
+
+impl<N: ComplexField, D: Dim> fmt::Debug for Schur<N, D>
+    where DefaultAllocator: Allocator<N, D, D>, MatrixN<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Schur").field("q", &self.q).field("t", &self.t).finish()
+    }
 }
 
 impl<N: ComplexField, D: Dim> Copy for Schur<N, D>

@@ -23,11 +23,17 @@ use crate::geometry::Point;
 
 /// A rotation matrix.
 #[repr(C)]
-#[derive(Debug)]
 pub struct Rotation<N: Scalar, D: DimName>
 where DefaultAllocator: Allocator<N, D, D>
 {
     matrix: MatrixN<N, D>,
+}
+
+impl<N: Scalar, D: DimName> fmt::Debug for Rotation<N, D>
+    where DefaultAllocator: Allocator<N, D, D>, MatrixN<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Rotation").field("matrix", &self.matrix).finish()
+    }
 }
 
 impl<N: Scalar + hash::Hash, D: DimName + hash::Hash> hash::Hash for Rotation<N, D>

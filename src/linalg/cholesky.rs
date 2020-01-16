@@ -10,6 +10,8 @@ use crate::constraint::{SameNumberOfRows, ShapeConstraint};
 use crate::dimension::{Dim, DimAdd, DimSum, DimDiff, DimSub, Dynamic, U1};
 use crate::storage::{Storage, StorageMut};
 
+use std::fmt;
+
 /// The Cholesky decomposition of a symmetric-definite-positive matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -22,12 +24,19 @@ use crate::storage::{Storage, StorageMut};
     serde(bound(deserialize = "DefaultAllocator: Allocator<N, D>,
          MatrixN<N, D>: Deserialize<'de>"))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Cholesky<N: ComplexField, D: Dim>
 where
     DefaultAllocator: Allocator<N, D, D>,
 {
     chol: MatrixN<N, D>,
+}
+
+impl<N: ComplexField, D: Dim> fmt::Debug for Cholesky<N, D>
+    where DefaultAllocator: Allocator<N, D, D>, MatrixN<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Cholesky").field("chol", &self.chol).finish()
+    }
 }
 
 impl<N: ComplexField, D: Dim> Copy for Cholesky<N, D>

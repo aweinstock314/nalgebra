@@ -11,6 +11,8 @@ use crate::storage::{Storage, StorageMut};
 use crate::linalg::lu;
 use crate::linalg::PermutationSequence;
 
+use std::fmt;
+
 /// LU decomposition with full row and column pivoting.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -31,7 +33,7 @@ use crate::linalg::PermutationSequence;
          PermutationSequence<DimMinimum<R, C>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct FullPivLU<N: ComplexField, R: DimMin<C>, C: Dim>
 where DefaultAllocator: Allocator<N, R, C> + Allocator<(usize, usize), DimMinimum<R, C>>
 {
@@ -39,6 +41,14 @@ where DefaultAllocator: Allocator<N, R, C> + Allocator<(usize, usize), DimMinimu
     p: PermutationSequence<DimMinimum<R, C>>,
     q: PermutationSequence<DimMinimum<R, C>>,
 }
+
+impl<N: ComplexField, R: DimMin<C>, C: Dim> fmt::Debug for FullPivLU<N, R, C>
+    where DefaultAllocator: Allocator<N, R, C> + Allocator<(usize, usize), DimMinimum<R, C>>, MatrixMN<N, R, C>: fmt::Debug, PermutationSequence<DimMinimum<R, C>>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("FullPivLU").field("lu", &self.lu).field("p", &self.p).field("q", &self.q).finish()
+    }
+}
+
 
 impl<N: ComplexField, R: DimMin<C>, C: Dim> Copy for FullPivLU<N, R, C>
 where

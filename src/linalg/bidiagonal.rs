@@ -10,6 +10,8 @@ use crate::storage::Storage;
 use crate::geometry::Reflection;
 use crate::linalg::householder;
 
+use std::fmt;
+
 /// The bidiagonalization of a general matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -36,7 +38,7 @@ use crate::linalg::householder;
          VectorN<N, DimDiff<DimMinimum<R, C>, U1>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Bidiagonal<N: ComplexField, R: DimMin<C>, C: Dim>
 where
     DimMinimum<R, C>: DimSub<U1>,
@@ -53,6 +55,27 @@ where
     off_diagonal: VectorN<N, DimDiff<DimMinimum<R, C>, U1>>,
     upper_diagonal: bool,
 }
+
+impl<N: ComplexField, R: DimMin<C>, C: Dim> fmt::Debug for Bidiagonal<N, R, C>
+    where 
+    DimMinimum<R, C>: DimSub<U1>,
+    DefaultAllocator: Allocator<N, R, C>
+        + Allocator<N, DimMinimum<R, C>>
+        + Allocator<N, DimDiff<DimMinimum<R, C>, U1>>,
+    MatrixMN<N, R, C>: fmt::Debug,
+    VectorN<N, DimMinimum<R, C>>: fmt::Debug,
+    VectorN<N, DimDiff<DimMinimum<R, C>, U1>>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Bidiagonal")
+            .field("uv", &self.uv)
+            .field("diagonal", &self.diagonal)
+            .field("off_diagonal", &self.off_diagonal)
+            .field("upper_diagonal", &self.upper_diagonal)
+            .finish()
+    }
+}
+
 
 impl<N: ComplexField, R: DimMin<C>, C: Dim> Copy for Bidiagonal<N, R, C>
 where

@@ -9,6 +9,8 @@ use crate::storage::Storage;
 
 use crate::linalg::householder;
 
+use std::fmt;
+
 /// Tridiagonalization of a symmetric matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -29,12 +31,19 @@ use crate::linalg::householder;
          VectorN<N, DimDiff<D, U1>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SymmetricTridiagonal<N: ComplexField, D: DimSub<U1>>
 where DefaultAllocator: Allocator<N, D, D> + Allocator<N, DimDiff<D, U1>>
 {
     tri: MatrixN<N, D>,
     off_diagonal: VectorN<N, DimDiff<D, U1>>,
+}
+
+impl<N: ComplexField, D: DimSub<U1>> fmt::Debug for SymmetricTridiagonal<N, D>
+    where DefaultAllocator: Allocator<N, D, D> + Allocator<N, DimDiff<D, U1>>, MatrixN<N, D>: fmt::Debug, VectorN<N, DimDiff<D, U1>>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SymmetricTridiagonal").field("tri", &self.tri).field("off_diagonal", &self.off_diagonal).finish()
+    }
 }
 
 impl<N: ComplexField, D: DimSub<U1>> Copy for SymmetricTridiagonal<N, D>

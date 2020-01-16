@@ -9,6 +9,8 @@ use crate::storage::Storage;
 
 use crate::linalg::householder;
 
+use std::fmt;
+
 /// Hessenberg decomposition of a general matrix.
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -29,12 +31,19 @@ use crate::linalg::householder;
          VectorN<N, DimDiff<D, U1>>: Deserialize<'de>"
     ))
 )]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Hessenberg<N: ComplexField, D: DimSub<U1>>
 where DefaultAllocator: Allocator<N, D, D> + Allocator<N, DimDiff<D, U1>>
 {
     hess: MatrixN<N, D>,
     subdiag: VectorN<N, DimDiff<D, U1>>,
+}
+
+impl<N: ComplexField, D: DimSub<U1>> fmt::Debug for Hessenberg<N, D>
+    where DefaultAllocator: Allocator<N, D, D> + Allocator<N, DimDiff<D, U1>>, MatrixN<N, D>: fmt::Debug, VectorN<N, DimDiff<D, U1>>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Hessenberg").field("hess", &self.hess).field("subdiag", &self.subdiag).finish()
+    }
 }
 
 impl<N: ComplexField, D: DimSub<U1>> Copy for Hessenberg<N, D>

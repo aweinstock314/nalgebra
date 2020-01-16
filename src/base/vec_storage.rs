@@ -7,9 +7,11 @@ use alloc::vec::Vec;
 use crate::base::allocator::Allocator;
 use crate::base::default_allocator::DefaultAllocator;
 use crate::base::dimension::{Dim, DimName, Dynamic, U1};
-use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Owned, Storage, StorageMut};
+use crate::base::storage::{ContiguousStorage, ContiguousStorageMut, Owned, Storage, StorageMut, InitializedTag, UninitializedTag, GenericOverInitializednessAllocatorDispatch};
 use crate::base::{Scalar, Vector};
 use crate::base::constraint::{SameNumberOfRows, ShapeConstraint};
+
+use std::mem::MaybeUninit;
 
 #[cfg(feature = "abomonation-serialize")]
 use abomonation::Abomonation;
@@ -96,13 +98,14 @@ impl<N, R: Dim, C: Dim> Into<Vec<N>> for VecStorage<N, R, C>
     }
 }
 
+// BEGIN InitializedTag/UninitializedTag impls
 /*
  *
  * Dynamic − Static
  * Dynamic − Dynamic
  *
  */
-unsafe impl<N: Scalar, C: Dim> Storage<N, Dynamic, C> for VecStorage<N, Dynamic, C>
+unsafe impl<N: Scalar, C: Dim> Storage<N, Dynamic, C, InitializedTag> for VecStorage<N, Dynamic, C>
 where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
 {
     type RStride = U1;
@@ -146,7 +149,7 @@ where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
     }
 }
 
-unsafe impl<N: Scalar, R: DimName> Storage<N, R, Dynamic> for VecStorage<N, R, Dynamic>
+unsafe impl<N: Scalar, R: DimName> Storage<N, R, Dynamic, InitializedTag> for VecStorage<N, R, Dynamic>
 where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
 {
     type RStride = U1;
@@ -195,7 +198,7 @@ where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
  * StorageMut, ContiguousStorage.
  *
  */
-unsafe impl<N: Scalar, C: Dim> StorageMut<N, Dynamic, C> for VecStorage<N, Dynamic, C>
+unsafe impl<N: Scalar, C: Dim> StorageMut<N, Dynamic, C, InitializedTag> for VecStorage<N, Dynamic, C>
 where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
 {
     #[inline]
@@ -209,13 +212,20 @@ where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
     }
 }
 
-unsafe impl<N: Scalar, C: Dim> ContiguousStorage<N, Dynamic, C> for VecStorage<N, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
+unsafe impl<N: Scalar, C: Dim> ContiguousStorage<N, Dynamic, C, InitializedTag> for VecStorage<N, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
 {}
 
-unsafe impl<N: Scalar, C: Dim> ContiguousStorageMut<N, Dynamic, C> for VecStorage<N, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
+unsafe impl<N: Scalar, C: Dim> ContiguousStorageMut<N, Dynamic, C, InitializedTag> for VecStorage<N, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, Buffer = Self>
 {}
 
-unsafe impl<N: Scalar, R: DimName> StorageMut<N, R, Dynamic> for VecStorage<N, R, Dynamic>
+unsafe impl<N: Scalar, R: DimName> ContiguousStorage<N, R, Dynamic, InitializedTag> for VecStorage<N, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
+{}
+
+unsafe impl<N: Scalar, R: DimName> ContiguousStorageMut<N, R, Dynamic, InitializedTag> for VecStorage<N, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
+{}
+
+
+unsafe impl<N: Scalar, R: DimName> StorageMut<N, R, Dynamic, InitializedTag> for VecStorage<N, R, Dynamic>
 where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
 {
     #[inline]
@@ -228,6 +238,143 @@ where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
         &mut self.data[..]
     }
 }
+
+// UninitializedTag variants
+
+unsafe impl<N: Scalar, C: Dim> Storage<N, Dynamic, C, UninitializedTag> for VecStorage<MaybeUninit<N>, Dynamic, C>
+where DefaultAllocator: Allocator<N, Dynamic, C, UninitBuffer = Self>
+{
+    type RStride = U1;
+    type CStride = Dynamic;
+
+    #[inline]
+    fn ptr(&self) -> *const MaybeUninit<N> {
+        self.data.as_ptr()
+    }
+
+    #[inline]
+    fn shape(&self) -> (Dynamic, C) {
+        (self.nrows, self.ncols)
+    }
+
+    #[inline]
+    fn strides(&self) -> (Self::RStride, Self::CStride) {
+        (Self::RStride::name(), self.nrows)
+    }
+
+    #[inline]
+    fn is_contiguous(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn into_owned(self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, Dynamic, C, DefaultAllocator>>::Owned
+    where DefaultAllocator: Allocator<N, Dynamic, C> {
+        self
+    }
+
+    #[inline]
+    fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, Dynamic, C, DefaultAllocator>>::Owned
+    where DefaultAllocator: Allocator<N, Dynamic, C> {
+        *self.clone()
+    }
+
+    #[inline]
+    fn as_slice(&self) -> &[MaybeUninit<N>] {
+        &self.data
+    }
+}
+
+unsafe impl<N: Scalar, R: DimName> Storage<N, R, Dynamic, UninitializedTag> for VecStorage<MaybeUninit<N>, R, Dynamic>
+where DefaultAllocator: Allocator<N, R, Dynamic, UninitBuffer = Self>
+{
+    type RStride = U1;
+    type CStride = R;
+
+    #[inline]
+    fn ptr(&self) -> *const MaybeUninit<N> {
+        self.data.as_ptr()
+    }
+
+    #[inline]
+    fn shape(&self) -> (R, Dynamic) {
+        (self.nrows, self.ncols)
+    }
+
+    #[inline]
+    fn strides(&self) -> (Self::RStride, Self::CStride) {
+        (Self::RStride::name(), self.nrows)
+    }
+
+    #[inline]
+    fn is_contiguous(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn into_owned(self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, Dynamic, DefaultAllocator>>::Owned
+    where DefaultAllocator: Allocator<N, R, Dynamic> {
+        self
+    }
+
+    #[inline]
+    fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, Dynamic, DefaultAllocator>>::Owned
+    where DefaultAllocator: Allocator<N, R, Dynamic> {
+        *self.clone()
+    }
+
+    #[inline]
+    fn as_slice(&self) -> &[MaybeUninit<N>] {
+        &self.data
+    }
+}
+
+/*
+ *
+ * StorageMut, ContiguousStorage.
+ *
+ */
+unsafe impl<N: Scalar, C: Dim> StorageMut<N, Dynamic, C, UninitializedTag> for VecStorage<MaybeUninit<N>, Dynamic, C>
+where DefaultAllocator: Allocator<N, Dynamic, C, UninitBuffer = Self>
+{
+    #[inline]
+    fn ptr_mut(&mut self) -> *mut MaybeUninit<N> {
+        self.data.as_mut_ptr()
+    }
+
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [MaybeUninit<N>] {
+        &mut self.data[..]
+    }
+}
+
+unsafe impl<N: Scalar, C: Dim> ContiguousStorage<N, Dynamic, C, UninitializedTag> for VecStorage<MaybeUninit<N>, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, UninitBuffer = Self>
+{}
+
+unsafe impl<N: Scalar, C: Dim> ContiguousStorageMut<N, Dynamic, C, UninitializedTag> for VecStorage<MaybeUninit<N>, Dynamic, C> where DefaultAllocator: Allocator<N, Dynamic, C, UninitBuffer = Self>
+{}
+
+unsafe impl<N: Scalar, R: DimName> ContiguousStorage<N, R, Dynamic, UninitializedTag> for VecStorage<MaybeUninit<N>, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, UninitBuffer = Self>
+{}
+
+unsafe impl<N: Scalar, R: DimName> ContiguousStorageMut<N, R, Dynamic, UninitializedTag> for VecStorage<MaybeUninit<N>, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, UninitBuffer = Self>
+{}
+
+unsafe impl<N: Scalar, R: DimName> StorageMut<N, R, Dynamic, UninitializedTag> for VecStorage<MaybeUninit<N>, R, Dynamic>
+where DefaultAllocator: Allocator<N, R, Dynamic, UninitBuffer = Self>
+{
+    #[inline]
+    fn ptr_mut(&mut self) -> *mut MaybeUninit<N> {
+        self.data.as_mut_ptr()
+    }
+
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [MaybeUninit<N>] {
+        &mut self.data[..]
+    }
+}
+
+// END InitializedTag/UninitializedTag impls
 
 #[cfg(feature = "abomonation-serialize")]
 impl<N: Abomonation, R: Dim, C: Dim> Abomonation for VecStorage<N, R, C> {
@@ -243,12 +390,6 @@ impl<N: Abomonation, R: Dim, C: Dim> Abomonation for VecStorage<N, R, C> {
         self.data.extent()
     }
 }
-
-unsafe impl<N: Scalar, R: DimName> ContiguousStorage<N, R, Dynamic> for VecStorage<N, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
-{}
-
-unsafe impl<N: Scalar, R: DimName> ContiguousStorageMut<N, R, Dynamic> for VecStorage<N, R, Dynamic> where DefaultAllocator: Allocator<N, R, Dynamic, Buffer = Self>
-{}
 
 impl<N, R: Dim> Extend<N> for VecStorage<N, R, Dynamic>
 {

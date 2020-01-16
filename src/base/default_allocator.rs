@@ -80,7 +80,7 @@ where
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<N: Scalar, C: Dim> Allocator<N, Dynamic, C> for DefaultAllocator {
     type Buffer = VecStorage<N, Dynamic, C>;
-    //type UninitBuffer = VecStorage<mem::MaybeUninit<N>, Dynamic, C>;
+    type UninitBuffer = VecStorage<mem::MaybeUninit<N>, Dynamic, C>;
 
     #[inline]
     unsafe fn allocate_uninitialized(nrows: Dynamic, ncols: C) -> Self::Buffer {
@@ -112,6 +112,7 @@ impl<N: Scalar, C: Dim> Allocator<N, Dynamic, C> for DefaultAllocator {
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<N: Scalar, R: DimName> Allocator<N, R, Dynamic> for DefaultAllocator {
     type Buffer = VecStorage<N, R, Dynamic>;
+    type UninitBuffer = VecStorage<mem::MaybeUninit<N>, R, Dynamic>;
 
     #[inline]
     unsafe fn allocate_uninitialized(nrows: R, ncols: Dynamic) -> Self::Buffer {

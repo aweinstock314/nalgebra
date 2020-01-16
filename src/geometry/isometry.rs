@@ -22,7 +22,6 @@ use crate::geometry::{Point, Translation};
 
 /// A direct isometry, i.e., a rotation followed by a translation, aka. a rigid-body motion, aka. an element of a Special Euclidean (SE) group.
 #[repr(C)]
-#[derive(Debug)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "serde-serialize",
@@ -50,6 +49,13 @@ where DefaultAllocator: Allocator<N, D>
         serde(skip_serializing, skip_deserializing)
     )]
     _noconstruct: PhantomData<N>,
+}
+
+impl<N: RealField, D: DimName, R> fmt::Debug for Isometry<N, D, R>
+    where DefaultAllocator: Allocator<N, D>, R: fmt::Debug, Translation<N, D>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Isometry").field("rotation", &self.rotation).field("translation", &self.translation).finish()
+    }
 }
 
 #[cfg(feature = "abomonation-serialize")]

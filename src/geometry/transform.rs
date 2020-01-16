@@ -1,6 +1,6 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::any::Any;
-use std::fmt::Debug;
+use std::fmt;
 use std::marker::PhantomData;
 
 #[cfg(feature = "serde-serialize")]
@@ -18,7 +18,7 @@ use crate::geometry::Point;
 /// Trait implemented by phantom types identifying the projective transformation type.
 ///
 /// NOTE: this trait is not intended to be implemented outside of the `nalgebra` crate.
-pub trait TCategory: Any + Debug + Copy + PartialEq + Send {
+pub trait TCategory: Any + fmt::Debug + Copy + PartialEq + Send {
     /// Indicates whether a `Transform` with the category `Self` has a bottom-row different from
     /// `0 0 .. 1`.
     #[inline]
@@ -156,13 +156,20 @@ super_tcategory_impl!(
 /// It is stored as a matrix with dimensions `(D + 1, D + 1)`, e.g., it stores a 4x4 matrix for a
 /// 3D transformation.
 #[repr(C)]
-#[derive(Debug)]
 pub struct Transform<N: RealField, D: DimNameAdd<U1>, C: TCategory>
 where DefaultAllocator: Allocator<N, DimNameSum<D, U1>, DimNameSum<D, U1>>
 {
     matrix: MatrixN<N, DimNameSum<D, U1>>,
     _phantom: PhantomData<C>,
 }
+
+impl<N: RealField, D: DimNameAdd<U1>, C: TCategory> fmt::Debug for Transform<N, D, C>
+    where DefaultAllocator: Allocator<N, DimNameSum<D, U1>, DimNameSum<D, U1>>, MatrixN<N, DimNameSum<D, U1>>: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Transform").field("matrix", &self.matrix).finish()
+    }
+}
+
 
 // FIXME
 // impl<N: RealField + hash::Hash, D: DimNameAdd<U1> + hash::Hash, C: TCategory> hash::Hash for Transform<N, D, C>

@@ -251,6 +251,8 @@ where
     DefaultAllocator: Allocator<N, R, C, Buffer = Self, UninitBuffer = ArrayStorage<MaybeUninit<N>, R, C>>,
 {}
 
+// UninitializedTag variants
+
 unsafe impl<N, R, C> Storage<N, R, C, UninitializedTag> for ArrayStorage<MaybeUninit<N>, R, C>
 where
     N: Scalar,
@@ -293,13 +295,14 @@ where
     #[inline]
     fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, C, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, R, C> {
-        let it = self.iter().cloned();
+        unimplemented!();
+        /*let it = self.iter().cloned();
 
-        DefaultAllocator::allocate_from_iterator(self.shape().0, self.shape().1, it)
+        DefaultAllocator::allocate_from_iterator(self.shape().0, self.shape().1, it)*/
     }
 
     #[inline]
-    fn as_slice(&self) -> &[N] {
+    fn as_slice(&self) -> &[MaybeUninit<N>] {
         &self[..]
     }
 }
