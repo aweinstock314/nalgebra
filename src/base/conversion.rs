@@ -350,6 +350,7 @@ where
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
     ArrayStorage<N, R, C>: Storage<N, R, C, InitializedTag>,
+    DefaultAllocator: Allocator<N, R, C>
 {
     fn from(matrix_slice: MatrixSlice<'a, N, R, C, RStride, CStride>) -> Self {
         matrix_slice.into_owned()
