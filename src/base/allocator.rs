@@ -19,6 +19,7 @@ use crate::base::{DefaultAllocator, Scalar};
 pub trait Allocator<N: Scalar, R: Dim, C: Dim = U1>: Any + Sized {
     /// The type of buffer this allocator can instanciate.
     type Buffer: ContiguousStorageMut<N, R, C, InitializedTag> + Clone;
+    /// The type of a buffer of uninitialized memory from this allocator
     type UninitBuffer: ContiguousStorageMut<N, R, C, UninitializedTag>;
 
     /// Allocates a buffer with the given number of rows and columns without initializing its content.

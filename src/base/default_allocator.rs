@@ -46,6 +46,7 @@ where
     type Buffer = ArrayStorage<N, R, C>;
     type UninitBuffer = ArrayStorage<mem::MaybeUninit<N>, R, C>;
 
+    // TODO: replace Self::Buffer with Self::UninitBuffer to start the refactoring for replacing mem::uninitialized with mem::MaybeUninit
     #[inline]
     unsafe fn allocate_uninitialized(_: R, _: C) -> Self::Buffer {
         mem::uninitialized()

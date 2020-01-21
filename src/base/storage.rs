@@ -34,21 +34,27 @@ pub type RStride<N, R, C = U1, G = InitializedTag> =
 pub type CStride<N, R, C = U1, G = InitializedTag> =
     <<DefaultAllocator as Allocator<N, R, C>>::Buffer as Storage<N, R, C, G>>::CStride;
 
+/// A tag indicating that memory is uninitialized, used for trait resolution
 pub struct UninitializedTag;
+/// A tag indicating that memory is initialized, used for trait resolution
 pub struct InitializedTag;
 
+/// GenericOverInitializedness is a type-level function for computing the type of a Storage implementation's Scalars based on whether they are initialized or uninitialized.
 pub unsafe trait GenericOverInitializedness<N: Scalar, R: Dim, C: Dim = U1> {
+    /// The computed type for possibly-initialized Scalars
     type Scalar;
 }
 unsafe impl<N: Scalar, R: Dim, C: Dim> GenericOverInitializedness<N, R, C> for UninitializedTag {
     type Scalar = mem::MaybeUninit<N>;
-    //type Scalar = N;
 }
 unsafe impl<N: Scalar, R: Dim, C: Dim> GenericOverInitializedness<N, R, C> for InitializedTag {
     type Scalar = N;
 }
 
+/// GenericOverInitializednessAllocatorDispatch is a type-level function for computing the type of the whole buffer based on whether the elements are initialized or uninitialized.
+/// It is a separate trait from GenericOverInitializedness in order to properly scope the bounds on the Allocator in Storage impls to just {into_owned, clone_owned}.
 pub unsafe trait GenericOverInitializednessAllocatorDispatch<N: Scalar, R: Dim, C: Dim, A: Allocator<N, R, C>>: GenericOverInitializedness<N, R, C> where Self: Sized {
+    /// The computed type for possibly-initialized owned buffers
     type Owned: ContiguousStorageMut<N, R, C, Self>;
 }
 unsafe impl<N: Scalar, R: Dim, C: Dim, A: Allocator<N, R, C>> GenericOverInitializednessAllocatorDispatch<N, R, C, A> for UninitializedTag {

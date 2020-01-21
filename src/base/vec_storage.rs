@@ -276,7 +276,8 @@ where DefaultAllocator: Allocator<N, Dynamic, C, UninitBuffer = Self>
     #[inline]
     fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, Dynamic, C, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, Dynamic, C> {
-        *self.clone()
+        //*self.clone()
+        panic!("attempted to clone potentially uninitialized memory");
     }
 
     #[inline]
@@ -320,7 +321,8 @@ where DefaultAllocator: Allocator<N, R, Dynamic, UninitBuffer = Self>
     #[inline]
     fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, Dynamic, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, R, Dynamic> {
-        *self.clone()
+        //*self.clone()
+        panic!("attempted to clone potentially uninitialized memory");
     }
 
     #[inline]

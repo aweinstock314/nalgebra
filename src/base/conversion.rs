@@ -349,7 +349,7 @@ where
     CStride: Dim,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
-    ArrayStorage<N, R, C>: Storage<N, R, C, InitializedTag>,
+    Prod<R::Value, C::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     fn from(matrix_slice: MatrixSlice<'a, N, R, C, RStride, CStride>) -> Self {
         matrix_slice.into_owned()
@@ -394,6 +394,7 @@ where
     CStride: Dim,
     R::Value: Mul<C::Value>,
     Prod<R::Value, C::Value>: ArrayLength<N>,
+    Prod<R::Value, C::Value>: ArrayLength<mem::MaybeUninit<N>>,
 {
     fn from(matrix_slice: MatrixSliceMut<'a, N, R, C, RStride, CStride>) -> Self {
         matrix_slice.into_owned()

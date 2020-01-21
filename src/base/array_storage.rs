@@ -295,10 +295,10 @@ where
     #[inline]
     fn clone_owned(&self) -> <UninitializedTag as GenericOverInitializednessAllocatorDispatch<N, R, C, DefaultAllocator>>::Owned
     where DefaultAllocator: Allocator<N, R, C> {
-        unimplemented!();
         /*let it = self.iter().cloned();
 
         DefaultAllocator::allocate_from_iterator(self.shape().0, self.shape().1, it)*/
+        panic!("attempted to clone potentially uninitialized memory");
     }
 
     #[inline]
